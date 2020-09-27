@@ -4,7 +4,7 @@ import configparser
 import os
 import sys
 
-# get channel_secret and channel_access_token from your environment variable
+# read environment variable
 org_id = os.getenv('ORGID', None)
 mgmt_api_key = os.getenv('MANAGEMENTAPIKEY', None)
 mgmt_api_secret = os.getenv('MANAGEMENTAPISECRET', None)
