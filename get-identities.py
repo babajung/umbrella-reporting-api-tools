@@ -1,13 +1,29 @@
 import json
 import requests
 import configparser
+import os
+import sys
+
+# get channel_secret and channel_access_token from your environment variable
+org_id = os.getenv('ORGID', None)
+mgmt_api_key = os.getenv('MANAGEMENTAPIKEY', None)
+mgmt_api_secret = os.getenv('MANAGEMENTAPISECRET', None)
+if org_id is None:
+    print('Specify ORGID as environment variable.')
+    sys.exit(1)
+if mgmt_api_key is None:
+    print('Specify MANAGEMENTAPIKEY as environment variable.')
+    sys.exit(1)
+if mgmt_api_secret is None:
+    print('Specify MANAGEMENTAPISECRET as environment variable.')
+    sys.exit(1)
 
 # read variables from config
 config = configparser.ConfigParser()
 config.read('config')
-org_id = config['Umbrella']['OrgID']
-mgmt_api_key = config['Umbrella']['ManagementAPIKey']
-mgmt_api_secret = config['Umbrella']['ManagementAPISecret']
+#org_id = config['Umbrella']['OrgID']
+#mgmt_api_key = config['Umbrella']['ManagementAPIKey']
+#mgmt_api_secret = config['Umbrella']['ManagementAPISecret']
 
 search_type = config['SearchOptions']['Type']
 category_type = config['SearchOptions']['Category']
@@ -23,7 +39,11 @@ reporting_api_url = 'https://reports.api.umbrella.com/v2'
 
 def get_reporting_request(access_token, endpoint):
     header['Authorization'] = 'Bearer {}'.format(access_token)
-    r = requests.get(reporting_api_url+endpoint, headers=header)
+    r = requests.get(reporting_api_url+endpoint, headers=header, allow_redirects=False)
+    if r.status_code == 302:
+        url_redirect = r.headers['Location']
+        print("REDIRECT to {}\n..\n".format(url_redirect))
+        r = requests.get(url_redirect, headers=header, allow_redirects=False)
     body = json.loads(r.content)
     return body
 
@@ -57,7 +77,7 @@ if __name__ == '__main__':
 
     # loop througth categories or applications list and get id
     search_id = ''
-    for i in r['data']:
+    for i in r['data'][list_endpoint]:
         if 'label' in i:
             if i['label'].lower() == search_param.lower():
                 search_id = i['id']
